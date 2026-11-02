@@ -1,6 +1,7 @@
    const express =  require("express")
 const youtubedl = require('youtube-dl-exec');
 const cors = require("cors");
+const crypto = require("crypto");
 
 const fs = require("fs");
 const path = require("path");
@@ -60,11 +61,11 @@ app.post("/download", async function (req, res) {
     });
   }
 
-  const jobFolder = path.join(
-    downloadFolder,
-    "video-" + Date.now() + "-" + Math.random().toString(36).slice(2)
-  );
-
+ 
+const jobFolder = path.join(
+  downloadFolder,
+  "video-" + crypto.randomUUID()
+);
   try {
     await fs.promises.mkdir(jobFolder, { recursive: true });
 
@@ -80,7 +81,7 @@ app.post("/download", async function (req, res) {
 const videoFile = files.find(function (file) {
   return (
     file.startsWith("video.") &&
-    /\.(mp4|webm|mov|mkv)$/i.test(file) &&
+   /\.(mp4|webm|mov|mkv)$/i.test(file) &&
     !file.endsWith(".part") &&
     !file.endsWith(".ytdl")
   );
@@ -89,9 +90,15 @@ const videoFile = files.find(function (file) {
       throw new Error("The video file was not created.");
     }
 
-    const videoPath = path.join(jobFolder, videoFile);
+        const videoPath = path.join(jobFolder, videoFile);
+   const downloadName =
+      "facebook-video-" +
+      crypto.randomUUID() +
+      path.extname(videoFile);
 
-    res.download(videoPath, videoFile, async function (error) {
+    // Send the video to the user's browser
+    res.download( videoPath , downloadName, async function (error) {
+
       await fs.promises.rm(jobFolder, {
         recursive: true,
         force: true
